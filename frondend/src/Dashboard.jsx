@@ -13,16 +13,14 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
   try {
-   const [postsRes, receivedRes, madeRes] = await Promise.all([
-  axios.get('/api/posts/mine', { headers: { Authorization: `Bearer ${token}` } }),
-  axios.get('/api/comments/mine/on-my-posts', { headers: { Authorization: `Bearer ${token}` } }),
-  axios.get('/api/comments/mine/my-comments', { headers: { Authorization: `Bearer ${token}` } }),
-]);
-
-setMyPosts(Array.isArray(postsRes.data) ? postsRes.data : []);
+    const [postsRes, receivedRes, madeRes] = await Promise.all([
+      axios.get('/api/posts/mine', { headers: { Authorization: `Bearer ${token}` } }),
+      axios.get('/api/comments/mine/on-my-posts', { headers: { Authorization: `Bearer ${token}` } }),
+      axios.get('/api/comments/mine/my-comments', { headers: { Authorization: `Bearer ${token}` } }),
+    ]);
+   setMyPosts(Array.isArray(postsRes.data) ? postsRes.data : []);
 setReceivedComments(Array.isArray(receivedRes.data) ? receivedRes.data : []);
 setMyComments(Array.isArray(madeRes.data) ? madeRes.data : []);
-
   } catch (err) {
     console.error('Error fetching dashboard data', err);
   } finally {

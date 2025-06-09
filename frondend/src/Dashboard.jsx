@@ -51,19 +51,25 @@ const Dashboard = () => {
         </Link>
       </div>
 
-      <section>
-        <h2 className="text-2xl font-bold mb-4">📌 Your Posts</h2>
-        {myPosts.length === 0 ? (
-          <p className="text-gray-500">You haven't posted anything yet.</p>
-        ) : (
-          myPosts.map(post => (
-            <div key={post._id} className="p-4 mb-3 bg-gray-100 rounded">
-              <p>{post.content}</p>
-              {post.image && <img src={post.image} alt="" className="mt-2 w-40" />}
-            </div>
-          ))
+   <section>
+  <h2 className="text-2xl font-bold mb-4">📌 Your Posts</h2>
+  {myPosts.length === 0 ? (
+    <p className="text-gray-500">You haven't posted anything yet.</p>
+  ) : (
+    myPosts.map(post => (
+      <div key={post._id} className="p-4 mb-3 bg-gray-100 rounded">
+        <p>{post.content}</p>
+        {post.image && (
+          <img
+            src={`https://feedbackly-backend.onrender.com${post.image}`}
+            alt=""
+            className="mt-2 w-40 rounded"
+          />
         )}
-      </section>
+      </div>
+    ))
+  )}
+</section>
 
       <section>
         <h2 className="text-2xl font-bold mb-4">💬 Comments Received</h2>

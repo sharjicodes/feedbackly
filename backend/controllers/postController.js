@@ -9,15 +9,17 @@ export const uploadMiddleware = upload.single("image");
 export const createPost = async (req, res) => {
   try {
     const { content } = req.body;
-    const image = req.file ? req.file.path : null; // Cloudinary returns full URL in `file.path`
+    const image = req.file ? req.file.path : null;
 
-    const newPost = new Post({ content, image, author: req.user?.id });
+    const newPost = new Post({ content, image, author: req.user?.id || null });
     await newPost.save();
     res.status(201).json(newPost);
   } catch (error) {
-    res.status(500).json({ message: "Post creation failed", error });
+    console.error("Post creation error:", error); // ✅ Add this
+    res.status(500).json({ message: "Post creation failed", error: error.message });
   }
 };
+
 // backend/controllers/postController.js
 
 export const getMyPosts = async (req, res) => {

@@ -18,7 +18,6 @@ export default function HomePage() {
   const [posts, setPosts] = useState([]);
   const [content, setContent] = useState("");
   const [image, setImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
   const [commentContent, setCommentContent] = useState({});
   const [currentUserId, setCurrentUserId] = useState(null);
 
@@ -117,7 +116,6 @@ export default function HomePage() {
         setPosts([{ ...data, comments: [] }, ...posts]);
         setContent("");
         setImage(null);
-        setImagePreview(null);
         setShowPostForm(false);
       } else {
         alert(data.message || "Post failed");
@@ -146,10 +144,7 @@ export default function HomePage() {
         setPosts((prev) =>
           prev.map((post) =>
             post._id === postId
-              ? {
-                  ...post,
-                  comments: [...(post.comments || []), newComment],
-                }
+              ? { ...post, comments: [...(post.comments || []), newComment] }
               : post
           )
         );
@@ -162,24 +157,9 @@ export default function HomePage() {
     }
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    setImage(file);
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setImagePreview(null);
-    }
-  };
-
   return (
     <div className={darkMode ? "dark" : ""}>
       <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
-        {/* Header */}
         <header className="flex justify-between items-center px-4 py-3 border-b border-gray-200 dark:border-gray-700">
           <div className="text-xl font-bold">feedbackly.me</div>
           <div className="hidden md:flex gap-4 items-center">
@@ -202,7 +182,6 @@ export default function HomePage() {
           </div>
         </header>
 
-        {/* Mobile menu */}
         {menuOpen && (
           <div className="md:hidden px-4 py-3 flex flex-col gap-2">
             {isLoggedIn ? (
@@ -217,14 +196,12 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Hero */}
         <section className="text-center px-6 py-12 max-w-3xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-extrabold leading-tight mb-4">Drop your thoughts. Get instant feedback.</h1>
           <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-6">Share an idea or design and receive anonymous comments from the community.</p>
           <button onClick={togglePostForm} className="px-6 py-2 bg-black dark:bg-white text-white dark:text-black rounded-full font-medium hover:scale-105 transition">Post Something</button>
         </section>
 
-        {/* Post form */}
         {showPostForm && (
           <div className="max-w-xl mx-auto px-4 mb-10">
             <div className="border p-4 rounded-xl bg-white dark:bg-gray-800 shadow">
@@ -237,16 +214,14 @@ export default function HomePage() {
               />
               <input
                 type="file"
-                onChange={handleImageChange}
+                onChange={(e) => setImage(e.target.files[0])}
                 className="mb-3 block w-full text-sm text-gray-500 dark:text-gray-300"
               />
-              {imagePreview && <img src={imagePreview} alt="preview" className="mb-3 rounded-lg" />}
               <button onClick={handlePost} className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">Post</button>
             </div>
           </div>
         )}
 
-        {/* Posts */}
         <section className="px-4 max-w-2xl mx-auto grid gap-6 pb-12">
           {posts.map((post) => (
             <div key={post._id} className="border border-gray-200 dark:border-gray-700 rounded-2xl p-4 bg-white dark:bg-gray-800 shadow-sm">
@@ -262,33 +237,99 @@ export default function HomePage() {
                 Posted on {new Date(post.createdAt).toLocaleString()}
               </div>
 
-              {/* Comments */}
-              <div className="space-y-2 mb-2">
+              {/* Comments Section */}
+              <div className="space-y-2">
                 {(post.comments || []).map((comment, index) => (
-                  <div key={index} className="text-sm bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded">
+                  <div key={index} className="text-sm bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded">
                     {comment.content}
                   </div>
                 ))}
               </div>
-              <div className="flex gap-2 mt-2">
-                <input
+
+              {/* Add Comment */}
+              <div className="mt-3">
+                <textarea
+                  rows="2"
+                  placeholder="Leave a comment..."
                   value={commentContent[post._id] || ""}
                   onChange={(e) =>
                     setCommentContent({ ...commentContent, [post._id]: e.target.value })
                   }
-                  placeholder="Write a comment..."
-                  className="flex-1 px-3 py-1 rounded border bg-white dark:bg-gray-700 dark:text-white"
+                  className="w-full mb-2 p-2 rounded border bg-white dark:bg-gray-700 dark:text-white"
                 />
                 <button
                   onClick={() => handleComment(post._id)}
-                  className="bg-blue-600 text-white px-3 rounded hover:bg-blue-700"
+                  className="px-4 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
-                  Send
+                  Comment
                 </button>
               </div>
             </div>
           ))}
         </section>
+
+        {/* Login Modal */}
+        {loginOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md w-full max-w-sm">
+              <h2 className="text-xl font-bold mb-4">Login</h2>
+              <input
+                type="email"
+                placeholder="Email"
+                className="w-full p-2 mb-3 rounded border"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                className="w-full p-2 mb-3 rounded border"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button onClick={handleLogin} className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Login</button>
+              <p className="text-sm mt-3">
+                Don’t have an account?{" "}
+                <button onClick={toggleSignup} className="text-blue-500 underline">Sign up</button>
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Signup Modal */}
+        {signupOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md w-full max-w-sm">
+              <h2 className="text-xl font-bold mb-4">Sign Up</h2>
+              <input
+                type="text"
+                placeholder="Name"
+                className="w-full p-2 mb-3 rounded border"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                className="w-full p-2 mb-3 rounded border"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                className="w-full p-2 mb-3 rounded border"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button onClick={handleSignup} className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">Sign Up</button>
+              <p className="text-sm mt-3">
+                Already have an account?{" "}
+                <button onClick={toggleLogin} className="text-blue-500 underline">Login</button>
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

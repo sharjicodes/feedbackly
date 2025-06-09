@@ -1,13 +1,10 @@
-// src/HomePage.jsx
 import React, { useState, useEffect } from "react";
 import { Sun, Moon, Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 
-
 const API_BASE = "https://feedbackly-backend.onrender.com";
 const API = `${API_BASE}/api`;
-
 
 export default function HomePage() {
   const [darkMode, setDarkMode] = useState(false);
@@ -21,11 +18,9 @@ export default function HomePage() {
   const [posts, setPosts] = useState([]);
   const [content, setContent] = useState("");
   const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [commentContent, setCommentContent] = useState({});
   const [currentUserId, setCurrentUserId] = useState(null);
-
-
- 
 
   const token = localStorage.getItem("token");
   const isLoggedIn = !!token;
@@ -60,7 +55,7 @@ export default function HomePage() {
   useEffect(() => {
     if (token) {
       try {
-       const decoded = jwtDecode(token); // ✅ CORRECT
+        const decoded = jwtDecode(token);
         setCurrentUserId(decoded.id);
       } catch (err) {
         console.error("Invalid token", err);
@@ -122,6 +117,7 @@ export default function HomePage() {
         setPosts([{ ...data, comments: [] }, ...posts]);
         setContent("");
         setImage(null);
+        setImagePreview(null);
         setShowPostForm(false);
       } else {
         alert(data.message || "Post failed");
@@ -166,9 +162,24 @@ export default function HomePage() {
     }
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setImage(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setImagePreview(null);
+    }
+  };
+
   return (
     <div className={darkMode ? "dark" : ""}>
       <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
+        {/* Header */}
         <header className="flex justify-between items-center px-4 py-3 border-b border-gray-200 dark:border-gray-700">
           <div className="text-xl font-bold">feedbackly.me</div>
           <div className="hidden md:flex gap-4 items-center">
@@ -191,6 +202,7 @@ export default function HomePage() {
           </div>
         </header>
 
+        {/* Mobile menu */}
         {menuOpen && (
           <div className="md:hidden px-4 py-3 flex flex-col gap-2">
             {isLoggedIn ? (
@@ -205,12 +217,14 @@ export default function HomePage() {
           </div>
         )}
 
+        {/* Hero */}
         <section className="text-center px-6 py-12 max-w-3xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-extrabold leading-tight mb-4">Drop your thoughts. Get instant feedback.</h1>
           <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-6">Share an idea or design and receive anonymous comments from the community.</p>
           <button onClick={togglePostForm} className="px-6 py-2 bg-black dark:bg-white text-white dark:text-black rounded-full font-medium hover:scale-105 transition">Post Something</button>
         </section>
 
+        {/* Post form */}
         {showPostForm && (
           <div className="max-w-xl mx-auto px-4 mb-10">
             <div className="border p-4 rounded-xl bg-white dark:bg-gray-800 shadow">
@@ -223,21 +237,23 @@ export default function HomePage() {
               />
               <input
                 type="file"
-                onChange={(e) => setImage(e.target.files[0])}
+                onChange={handleImageChange}
                 className="mb-3 block w-full text-sm text-gray-500 dark:text-gray-300"
               />
+              {imagePreview && <img src={imagePreview} alt="preview" className="mb-3 rounded-lg" />}
               <button onClick={handlePost} className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">Post</button>
             </div>
           </div>
         )}
 
-       <section className="px-4 max-w-2xl mx-auto grid gap-6 pb-12">
+        {/* Posts */}
+        <section className="px-4 max-w-2xl mx-auto grid gap-6 pb-12">
           {posts.map((post) => (
             <div key={post._id} className="border border-gray-200 dark:border-gray-700 rounded-2xl p-4 bg-white dark:bg-gray-800 shadow-sm">
               <p className="text-lg mb-3">{post.content}</p>
               {post.image && (
                 <img
-                  src={`${API_BASE}${post.image}`}
+                  src={post.image.startsWith("http") ? post.image : `${API_BASE}${post.image}`}
                   alt="post"
                   className="mb-3 rounded-lg"
                 />
@@ -247,68 +263,32 @@ export default function HomePage() {
               </div>
 
               {/* Comments */}
-              <div className="space-y-2">
+              <div className="space-y-2 mb-2">
                 {(post.comments || []).map((comment, index) => (
                   <div key={index} className="text-sm bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded">
                     {comment.content}
                   </div>
                 ))}
               </div>
-
-              {/* Add Comment - only if user is not the author */}
-            {(!post.author || post.author._id !== currentUserId) && (
-  <div className="mt-3">
-    <input
-      type="text"
-      value={commentContent[post._id] || ""}
-      onChange={(e) =>
-        setCommentContent({ ...commentContent, [post._id]: e.target.value })
-      }
-      placeholder="Write a comment..."
-      className="w-full px-3 py-1.5 rounded border mt-1 dark:bg-gray-700 dark:text-white"
-    />
-    <button
-      onClick={() => handleComment(post._id)}
-      className="mt-2 bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
-    >
-      Comment
-    </button>
-  </div>
-)}
-
+              <div className="flex gap-2 mt-2">
+                <input
+                  value={commentContent[post._id] || ""}
+                  onChange={(e) =>
+                    setCommentContent({ ...commentContent, [post._id]: e.target.value })
+                  }
+                  placeholder="Write a comment..."
+                  className="flex-1 px-3 py-1 rounded border bg-white dark:bg-gray-700 dark:text-white"
+                />
+                <button
+                  onClick={() => handleComment(post._id)}
+                  className="bg-blue-600 text-white px-3 rounded hover:bg-blue-700"
+                >
+                  Send
+                </button>
+              </div>
             </div>
           ))}
         </section>
-
-
-        {/* Login Modal */}
-        {loginOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl max-w-sm w-full shadow-lg">
-              <h2 className="text-xl font-bold mb-4">Login</h2>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" className="w-full mb-3 px-3 py-2 rounded border bg-white dark:bg-gray-700" />
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" className="w-full mb-3 px-3 py-2 rounded border bg-white dark:bg-gray-700" />
-              <button onClick={handleLogin} className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Sign In</button>
-              <button onClick={toggleSignup} className="mt-3 text-sm text-blue-500 hover:underline">Don't have an account? Sign up</button>
-              <button onClick={toggleLogin} className="mt-2 text-sm text-gray-500 hover:underline">Cancel</button>
-            </div>
-          </div>
-        )}
-
-        {/* Signup Modal */}
-        {signupOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl max-w-sm w-full shadow-lg">
-              <h2 className="text-xl font-bold mb-4">Sign Up</h2>
-              <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Name" className="w-full mb-3 px-3 py-2 rounded border bg-white dark:bg-gray-700" />
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" className="w-full mb-3 px-3 py-2 rounded border bg-white dark:bg-gray-700" />
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Create Password" className="w-full mb-3 px-3 py-2 rounded border bg-white dark:bg-gray-700" />
-              <button onClick={handleSignup} className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">Create Account</button>
-              <button onClick={toggleLogin} className="mt-3 text-sm text-blue-500 hover:underline">Already have an account? Log in</button>
-              <button onClick={toggleSignup} className="mt-2 text-sm text-gray-500 hover:underline">Cancel</button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

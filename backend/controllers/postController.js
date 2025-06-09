@@ -31,10 +31,17 @@ export const getMyPosts = async (req, res) => {
 };
 export const getAllPosts = async (req, res) => {
   try {
-    const posts = await Post.find().populate("comments");
+    const posts = await Post.find().sort({ createdAt: -1 }).populate("comments");
+
+    // Ensure we return an array and nothing else
+    if (!Array.isArray(posts)) {
+      return res.status(500).json({ message: "Posts is not an array" });
+    }
+
     res.status(200).json(posts);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error fetching posts" });
+    console.error("Error in getAllPosts:", err);
+    res.status(500).json({ message: "Error fetching posts", error: err.message });
   }
 };
+

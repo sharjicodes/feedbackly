@@ -42,6 +42,26 @@ export default function HomePage() {
     window.location.reload();
   };
 
+useEffect(() => {
+  fetch(`${API}/posts`)
+    .then(async (res) => {
+      const text = await res.text();
+      try {
+        const data = JSON.parse(text);
+        if (!Array.isArray(data)) throw new Error("Expected array");
+        console.log("Received posts:", data);
+        setPosts(data.map((post) => ({
+          ...post,
+          comments: post.comments || [],
+        })));
+      } catch (err) {
+        console.error("Error parsing posts response:", err);
+      }
+    })
+    .catch(console.error);
+}, []);
+
+
   useEffect(() => {
     fetch(`${API}/posts`)
       .then((res) => res.json())

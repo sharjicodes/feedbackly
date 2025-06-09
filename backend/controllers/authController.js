@@ -2,11 +2,17 @@
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { isValidEmail } from '../utils/validateEmail.js'; // ✅ Import validator
 
 // Signup function
 export const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
+
+    const emailValid = await isValidEmail(email);
+    if (!emailValid) {
+      return res.status(400).json({ message: 'Invalid or inactive email address' });
+    }
 
     const existingUser = await User.findOne({ email });
     if (existingUser)
@@ -27,6 +33,11 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    const emailValid = await isValidEmail(email);
+    if (!emailValid) {
+      return res.status(400).json({ message: 'Invalid or inactive email address' });
+    }
 
     const user = await User.findOne({ email });
     if (!user)

@@ -1,3 +1,4 @@
+//server.js
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -19,7 +20,14 @@ const PORT = process.env.PORT || 5000;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://feedbackly-wnx4.vercel.app"
+  ],
+  credentials: true
+}));
+
 app.use(express.json());
 
 // Serve static files (uploaded images)
@@ -38,3 +46,6 @@ mongoose
     app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
   })
   .catch((err) => console.error("❌ MongoDB connection error:", err));
+app.get('/', (req, res) => {
+  res.send('Feedbackly backend is running 🎉');
+});

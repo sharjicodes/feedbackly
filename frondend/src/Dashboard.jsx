@@ -12,25 +12,31 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-  try {
-    const [postsRes, receivedRes, madeRes] = await Promise.all([
-      axios.get('/api/posts/mine', { headers: { Authorization: `Bearer ${token}` } }),
-      axios.get('/api/comments/mine/on-my-posts', { headers: { Authorization: `Bearer ${token}` } }),
-      axios.get('/api/comments/mine/my-comments', { headers: { Authorization: `Bearer ${token}` } }),
-    ]);
-   setMyPosts(Array.isArray(postsRes.data) ? postsRes.data : []);
-setReceivedComments(Array.isArray(receivedRes.data) ? receivedRes.data : []);
-setMyComments(Array.isArray(madeRes.data) ? madeRes.data : []);
-  } catch (err) {
-    console.error('Error fetching dashboard data', err);
-  } finally {
-    setLoading(false);
-  }
-};
+      if (!token) return;
 
+      try {
+        const [postsRes, receivedRes, madeRes] = await Promise.all([
+          axios.get('/api/posts/mine', { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get('/api/comments/mine/on-my-posts', { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get('/api/comments/mine/my-comments', { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+
+        setMyPosts(Array.isArray(postsRes.data) ? postsRes.data : []);
+        setReceivedComments(Array.isArray(receivedRes.data) ? receivedRes.data : []);
+        setMyComments(Array.isArray(madeRes.data) ? madeRes.data : []);
+      } catch (err) {
+        console.error('Error fetching dashboard data', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
     fetchDashboardData();
   }, [token]);
+
+  if (!token) {
+    return <div className="p-8 text-center text-red-500">You must be logged in to view the dashboard.</div>;
+  }
 
   if (loading) return <div className="p-8 text-center">Loading dashboard...</div>;
 
@@ -45,6 +51,10 @@ setMyComments(Array.isArray(madeRes.data) ? madeRes.data : []);
         </Link>
       </div>
 
+      {myPosts.length === 0 && receivedComments.length === 0 && myComments.length === 0 && (
+        <div className="text-center text-gray-400">Nothing here yet. Start posting and engaging!</div>
+      )}
+
       <section>
         <h2 className="text-2xl font-bold mb-4">📌 Your Posts</h2>
         {myPosts.length === 0 ? (
@@ -53,7 +63,13 @@ setMyComments(Array.isArray(madeRes.data) ? madeRes.data : []);
           myPosts.map(post => (
             <div key={post._id} className="p-4 mb-3 bg-gray-100 rounded">
               <p>{post.content}</p>
-              {post.image && <img src={post.image} alt="" className="mt-2 w-40" />}
+              {post.image && (
+                <img
+                  src={`http://localhost:5000${post.image}`}
+                  alt="Post visual"
+                  className="mt-2 w-40 rounded"
+                />
+              )}
             </div>
           ))
         )}
@@ -66,7 +82,7 @@ setMyComments(Array.isArray(madeRes.data) ? madeRes.data : []);
         ) : (
           receivedComments.map(c => (
             <div key={c._id} className="p-3 mb-2 bg-green-100 rounded">
-              <p><strong>On your post:</strong> {c.post?.content}</p>
+              <p><strong>On your post:</strong> {c.post?.content || '[Post deleted]'}</p>
               <p className="italic">"{c.content}"</p>
             </div>
           ))
@@ -80,7 +96,7 @@ setMyComments(Array.isArray(madeRes.data) ? madeRes.data : []);
         ) : (
           myComments.map(c => (
             <div key={c._id} className="p-3 mb-2 bg-blue-100 rounded">
-              <p><strong>On someone else's post:</strong> {c.post?.content}</p>
+              <p><strong>On someone else's post:</strong> {c.post?.content || '[Post deleted]'}</p>
               <p className="italic">"{c.content}"</p>
             </div>
           ))

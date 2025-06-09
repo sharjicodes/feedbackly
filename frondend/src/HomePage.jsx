@@ -5,7 +5,9 @@ import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 
 
-const API = "http://localhost:5000/api";
+const API_BASE = "https://feedbackly-backend.onrender.com";
+const API = `${API_BASE}/api`;
+
 
 export default function HomePage() {
   const [darkMode, setDarkMode] = useState(false);
@@ -235,7 +237,7 @@ export default function HomePage() {
               <p className="text-lg mb-3">{post.content}</p>
               {post.image && (
                 <img
-                  src={`http://localhost:5000${post.image}`}
+                  src={`${API_BASE}${post.image}`}
                   alt="post"
                   className="mb-3 rounded-lg"
                 />

@@ -20,6 +20,8 @@ export default function HomePage() {
   const [image, setImage] = useState(null);
   const [commentContent, setCommentContent] = useState({});
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
 
   const token = localStorage.getItem("token");
   const isLoggedIn = !!token;
@@ -42,33 +44,33 @@ export default function HomePage() {
     window.location.reload();
   };
 
-useEffect(() => {
-  fetch(`${API}/posts`)
-    .then(async (res) => {
-      const text = await res.text();
-      try {
-        const data = JSON.parse(text);
-        if (!Array.isArray(data)) throw new Error("Expected array");
-        console.log("Received posts:", data);
-        setPosts(data.map((post) => ({
-          ...post,
-          comments: post.comments || [],
-        })));
-      } catch (err) {
-        console.error("Error parsing posts response:", err);
-      }
-    })
-    .catch(console.error);
-}, []);
-
-
   useEffect(() => {
-    fetch(`${API}/posts`)
-      .then((res) => res.json())
-      .then((data) =>
-        setPosts(data.map((post) => ({ ...post, comments: post.comments || [] })))
-      )
-      .catch(console.error);
+    const fetchPosts = async () => {
+      try {
+        const res = await fetch(`${API}/posts`);
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          if (!Array.isArray(data)) throw new Error("Expected array");
+          setPosts(
+            data.map((post) => ({
+              ...post,
+              comments: Array.isArray(post.comments) ? post.comments : [],
+            }))
+          );
+          setLoadError(null);
+        } catch (err) {
+          console.error("Invalid JSON from /posts", err);
+          setLoadError("Failed to load posts.");
+        }
+      } catch (err) {
+        console.error("Network error fetching posts", err);
+        setLoadError("Network error while loading posts.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPosts();
   }, []);
 
   useEffect(() => {
@@ -177,9 +179,18 @@ useEffect(() => {
     }
   };
 
+  const getImageUrl = (post) => {
+    if (post.imageUrl && post.imageUrl.startsWith("http")) return post.imageUrl;
+    if (post.image && post.image.startsWith("http")) return post.image;
+    if (post.imageUrl) return `${API_BASE}${post.imageUrl}`;
+    if (post.image) return `${API_BASE}${post.image}`;
+    return null;
+  };
+
   return (
     <div className={darkMode ? "dark" : ""}>
       <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
+        {/* Header */}
         <header className="flex justify-between items-center px-4 py-3 border-b border-gray-200 dark:border-gray-700">
           <div className="text-xl font-bold">feedbackly.me</div>
           <div className="hidden md:flex gap-4 items-center">
@@ -216,12 +227,14 @@ useEffect(() => {
           </div>
         )}
 
+        {/* Hero Section */}
         <section className="text-center px-6 py-12 max-w-3xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-extrabold leading-tight mb-4">Drop your thoughts. Get instant feedback.</h1>
           <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-6">Share an idea or design and receive anonymous comments from the community.</p>
           <button onClick={togglePostForm} className="px-6 py-2 bg-black dark:bg-white text-white dark:text-black rounded-full font-medium hover:scale-105 transition">Post Something</button>
         </section>
 
+        {/* Post Form */}
         {showPostForm && (
           <div className="max-w-xl mx-auto px-4 mb-10">
             <div className="border p-4 rounded-xl bg-white dark:bg-gray-800 shadow">
@@ -242,50 +255,59 @@ useEffect(() => {
           </div>
         )}
 
+        {/* Posts Section */}
         <section className="px-4 max-w-2xl mx-auto grid gap-6 pb-12">
-          {posts.map((post) => (
-            <div key={post._id} className="border border-gray-200 dark:border-gray-700 rounded-2xl p-4 bg-white dark:bg-gray-800 shadow-sm">
-              <p className="text-lg mb-3">{post.content}</p>
-              {post.image && (
-                <img
-                  src={post.image.startsWith("http") ? post.image : `${API_BASE}${post.image}`}
-                  alt="post"
-                  className="mb-3 rounded-lg"
-                />
-              )}
-              <div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                Posted on {new Date(post.createdAt).toLocaleString()}
-              </div>
+          {loading ? (
+            <div className="text-center text-gray-500 dark:text-gray-400">Loading posts...</div>
+          ) : loadError ? (
+            <div className="text-center text-red-500">{loadError}</div>
+          ) : posts.length === 0 ? (
+            <div className="text-center text-gray-500 dark:text-gray-400">No posts yet. Be the first to post!</div>
+          ) : (
+            posts.map((post) => (
+              <div key={post._id} className="border border-gray-200 dark:border-gray-700 rounded-2xl p-4 bg-white dark:bg-gray-800 shadow-sm">
+                <p className="text-lg mb-3">{post.content}</p>
+                {getImageUrl(post) && (
+                  <img
+                    src={getImageUrl(post)}
+                    alt="post"
+                    className="mb-3 rounded-lg"
+                  />
+                )}
+                <div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  Posted on {new Date(post.createdAt).toLocaleString()}
+                </div>
 
-              {/* Comments Section */}
-              <div className="space-y-2">
-                {(post.comments || []).map((comment, index) => (
-                  <div key={index} className="text-sm bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded">
-                    {comment.content}
-                  </div>
-                ))}
-              </div>
+                {/* Comments */}
+                <div className="space-y-2">
+                  {(post.comments || []).map((comment, index) => (
+                    <div key={index} className="text-sm bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded">
+                      {comment.content}
+                    </div>
+                  ))}
+                </div>
 
-              {/* Add Comment */}
-              <div className="mt-3">
-                <textarea
-                  rows="2"
-                  placeholder="Leave a comment..."
-                  value={commentContent[post._id] || ""}
-                  onChange={(e) =>
-                    setCommentContent({ ...commentContent, [post._id]: e.target.value })
-                  }
-                  className="w-full mb-2 p-2 rounded border bg-white dark:bg-gray-700 dark:text-white"
-                />
-                <button
-                  onClick={() => handleComment(post._id)}
-                  className="px-4 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                  Comment
-                </button>
+                {/* Add Comment */}
+                <div className="mt-3">
+                  <textarea
+                    rows="2"
+                    placeholder="Leave a comment..."
+                    value={commentContent[post._id] || ""}
+                    onChange={(e) =>
+                      setCommentContent({ ...commentContent, [post._id]: e.target.value })
+                    }
+                    className="w-full mb-2 p-2 rounded border bg-white dark:bg-gray-700 dark:text-white"
+                  />
+                  <button
+                    onClick={() => handleComment(post._id)}
+                    className="px-4 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    Comment
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </section>
 
         {/* Login Modal */}

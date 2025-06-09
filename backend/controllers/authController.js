@@ -1,16 +1,15 @@
-// backend/controllers/authController.js
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { isValidEmail } from '../utils/validateEmail.js'; // ✅ Import validator
+import { isValidEmail } from '../utils/emailValidator.js'; // ✅ import the utility
 
-// Signup function
 export const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    const emailValid = await isValidEmail(email);
-    if (!emailValid) {
+    // ✅ Check if email is valid
+    const valid = await isValidEmail(email);
+    if (!valid) {
       return res.status(400).json({ message: 'Invalid or inactive email address' });
     }
 
@@ -29,13 +28,13 @@ export const signup = async (req, res) => {
   }
 };
 
-// Login function
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const emailValid = await isValidEmail(email);
-    if (!emailValid) {
+    // ✅ Check if email is valid
+    const valid = await isValidEmail(email);
+    if (!valid) {
       return res.status(400).json({ message: 'Invalid or inactive email address' });
     }
 

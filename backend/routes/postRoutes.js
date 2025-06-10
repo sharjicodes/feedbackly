@@ -1,6 +1,6 @@
 import express from "express";
 import { createPost, getAllPosts, getMyPosts, uploadMiddleware } from "../controllers/postController.js";
-import { protect } from "../middleware/authMiddleware.js"; // allow anonymous users
+import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 

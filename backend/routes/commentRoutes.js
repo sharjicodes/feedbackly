@@ -9,11 +9,10 @@ import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// ✅ Place specific routes BEFORE dynamic ones
 router.get('/mine/on-my-posts', protect, getCommentsOnMyPosts);
 router.get('/mine/my-comments', protect, getMyComments);
 
-router.post('/:postId', addComment);  // public
-router.get('/:postId', getComments);  // public
+router.post('/:postId', addComment);
+router.get('/:postId', getComments);
 
 export default router;

@@ -1,7 +1,6 @@
-// /controllers/postController.js
 import Post from "../models/Post.js";
 import multer from "multer";
-import { storage } from "../utils/cloudinary.js"; // ✅ import Cloudinary storage
+import { storage } from "../utils/cloudinary.js";
 
 const upload = multer({ storage });
 export const uploadMiddleware = upload.single("image");
@@ -15,35 +14,25 @@ export const createPost = async (req, res) => {
     await newPost.save();
     res.status(201).json(newPost);
   } catch (error) {
-    console.error("Post creation error:", error); // ✅ Add this
+    console.error("Post creation error:", error);
     res.status(500).json({ message: "Post creation failed", error: error.message });
   }
 };
 
-// backend/controllers/postController.js
-
 export const getMyPosts = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const posts = await Post.find({ author: userId }).populate("comments");
+    const posts = await Post.find({ author: req.user.id }).populate("comments");
     res.status(200).json(posts);
   } catch (err) {
     res.status(500).json({ message: "Error fetching your posts" });
   }
 };
+
 export const getAllPosts = async (req, res) => {
   try {
     const posts = await Post.find().sort({ createdAt: -1 }).populate("comments");
-
-    // Ensure we return an array and nothing else
-    if (!Array.isArray(posts)) {
-      return res.status(500).json({ message: "Posts is not an array" });
-    }
-
     res.status(200).json(posts);
   } catch (err) {
-    console.error("Error in getAllPosts:", err);
     res.status(500).json({ message: "Error fetching posts", error: err.message });
   }
 };
-

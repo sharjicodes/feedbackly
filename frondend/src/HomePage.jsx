@@ -6,6 +6,8 @@ import { jwtDecode } from "jwt-decode";
 const API_BASE = "https://feedbackly-backend.onrender.com";
 const API = `${API_BASE}/api`;
 
+
+
 export default function HomePage() {
   const [darkMode, setDarkMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -255,60 +257,64 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Posts Section */}
-        <section className="px-4 max-w-2xl mx-auto grid gap-6 pb-12">
-          {loading ? (
-            <div className="text-center text-gray-500 dark:text-gray-400">Loading posts...</div>
-          ) : loadError ? (
-            <div className="text-center text-red-500">{loadError}</div>
-          ) : posts.length === 0 ? (
-            <div className="text-center text-gray-500 dark:text-gray-400">No posts yet. Be the first to post!</div>
-          ) : (
-            posts.map((post) => (
-              <div key={post._id} className="border border-gray-200 dark:border-gray-700 rounded-2xl p-4 bg-white dark:bg-gray-800 shadow-sm">
-                <p className="text-lg mb-3">{post.content}</p>
-                {getImageUrl(post) && (
-                  <img
-                    src={getImageUrl(post)}
-                    alt="post"
-                    className="mb-3 rounded-lg"
-                  />
-                )}
-                <div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                  Posted on {new Date(post.createdAt).toLocaleString()}
-                </div>
+       
+{/* Posts Section */}
+<section className="px-4 max-w-2xl mx-auto grid gap-6 pb-12">
+  {loading ? (
+    <div className="text-center text-gray-500 dark:text-gray-400">Loading posts...</div>
+  ) : loadError ? (
+    <div className="text-center text-red-500">{loadError}</div>
+  ) : posts.length === 0 ? (
+    <div className="text-center text-gray-500 dark:text-gray-400">No posts yet. Be the first to post!</div>
+  ) : (
+    posts.map((post) => (
+      <div key={post._id} className="border border-gray-200 dark:border-gray-700 rounded-2xl p-4 bg-white dark:bg-gray-800 shadow-sm">
+        <p className="text-lg mb-3">{post.content}</p>
+        {getImageUrl(post) && (
+          <img
+            src={getImageUrl(post)}
+            alt="post"
+            className="mb-3 rounded-lg"
+          />
+        )}
+        <div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+          Posted on {new Date(post.createdAt).toLocaleString()}
+        </div>
 
-                {/* Comments */}
-                <div className="space-y-2">
-                  {(post.comments || []).map((comment, index) => (
-                    <div key={index} className="text-sm bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded">
-                      {comment.content}
-                    </div>
-                  ))}
-                </div>
+        {/* Comments */}
+        <div className="space-y-2">
+          {(post.comments || []).map((comment, index) => (
+            <div key={index} className="text-sm bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded">
+              {comment.content}
+            </div>
+          ))}
+        </div>
 
-                {/* Add Comment */}
-                <div className="mt-3">
-                  <textarea
-                    rows="2"
-                    placeholder="Leave a comment..."
-                    value={commentContent[post._id] || ""}
-                    onChange={(e) =>
-                      setCommentContent({ ...commentContent, [post._id]: e.target.value })
-                    }
-                    className="w-full mb-2 p-2 rounded border bg-white dark:bg-gray-700 dark:text-white"
-                  />
-                  <button
-                    onClick={() => handleComment(post._id)}
-                    className="px-4 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                  >
-                    Comment
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </section>
+        {/* Add Comment - Only show if user is NOT the author */}
+        {(!currentUserId || post.author !== currentUserId) && (
+          <div className="mt-3">
+            <textarea
+              rows="2"
+              placeholder="Leave a comment..."
+              value={commentContent[post._id] || ""}
+              onChange={(e) =>
+                setCommentContent({ ...commentContent, [post._id]: e.target.value })
+              }
+              className="w-full mb-2 p-2 rounded border bg-white dark:bg-gray-700 dark:text-white"
+            />
+            <button
+              onClick={() => handleComment(post._id)}
+              className="px-4 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Comment
+            </button>
+          </div>
+        )}
+      </div>
+    ))
+  )}
+</section>
+
 
         {/* Login Modal */}
         {loginOpen && (

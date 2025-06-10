@@ -99,7 +99,18 @@ const Dashboard = () => {
           myComments.map(c => (
             <div key={c._id} className="p-3 mb-2 bg-blue-100 rounded">
               <p><strong>On someone else's post:</strong> {c.post?.content}</p>
-              <p className="italic">"{c.content}"</p>
+              {c.post?.image && (
+                <img
+                  src={
+                    c.post.image.startsWith("http")
+                      ? c.post.image
+                      : `https://feedbackly-backend.onrender.com${c.post.image}`
+                  }
+                  alt=""
+                  className="mt-2 w-32 rounded"
+                />
+              )}
+              <p className="italic mt-1">"{c.content}"</p>
             </div>
           ))
         )}

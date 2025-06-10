@@ -48,12 +48,15 @@ export const getCommentsOnMyPosts = async (req, res) => {
 
 export const getMyComments = async (req, res) => {
   try {
-    const comments = await Comment.find({ commenter: req.user.id }).sort({ createdAt: -1 });
+    const comments = await Comment.find({ commenter: req.user._id })
+      .populate("post")  // ← populate post data
+      .sort({ createdAt: -1 });
     res.json(comments);
   } catch (error) {
     res.status(500).json({ message: 'Failed to get your comments' });
   }
 };
+
 
 export const getComments = async (req, res) => {
   const { postId } = req.params;

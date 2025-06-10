@@ -291,7 +291,8 @@ export default function HomePage() {
         </div>
 
         {/* Add Comment - Only show if user is NOT the author */}
-        {(!currentUserId || (post.author?._id || post.author) !== currentUserId) && (
+        {(!currentUserId || String(post.author?._id || post.author) !== String(currentUserId)) && (
+
           <div className="mt-3">
             <textarea
               rows="2"

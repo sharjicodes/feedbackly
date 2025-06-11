@@ -300,8 +300,8 @@ export default function HomePage() {
 
                 {/* Comment Form */}
                 {isLoggedIn &&
-  ((typeof post.author === "string" && post.author !== currentUserId) ||
-   (typeof post.author === "object" && post.author?._id !== currentUserId)) && (
+  post.author &&
+  (post.author._id || post.author) !== currentUserId && (
                   <div className="mt-3">
                     <textarea
                       rows="2"

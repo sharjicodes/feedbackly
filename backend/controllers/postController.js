@@ -10,7 +10,7 @@ export const createPost = async (req, res) => {
     const { content } = req.body;
     const image = req.file ? req.file.path : null;
 
-    const newPost = new Post({ content, image, author: req.user?.id || null });
+    const newPost = new Post({ content, image, author: req.user?.id ?? null, });
     await newPost.save();
     res.status(201).json(newPost);
   } catch (error) {

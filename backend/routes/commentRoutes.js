@@ -1,3 +1,4 @@
+//commentroutes.js
 import express from 'express';
 import {
   addComment,
@@ -12,7 +13,7 @@ const router = express.Router();
 router.get('/mine/on-my-posts', protect, getCommentsOnMyPosts);
 router.get('/mine/my-comments', protect, getMyComments);
 
-router.post('/:postId', addComment);
+router.post('/:postId',protect, addComment);
 router.get('/:postId', getComments);
 
 export default router;

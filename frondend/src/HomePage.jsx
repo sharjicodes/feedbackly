@@ -1,12 +1,11 @@
+// HomePage.jsx
 import React, { useState, useEffect } from "react";
-import { Sun, Moon, Menu, X } from "lucide-react";
+import { Sun, Moon, Menu, X, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 
 const API_BASE = "https://feedbackly-backend.onrender.com";
 const API = `${API_BASE}/api`;
-
-
 
 export default function HomePage() {
   const [darkMode, setDarkMode] = useState(false);
@@ -24,6 +23,7 @@ export default function HomePage() {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const token = localStorage.getItem("token");
   const isLoggedIn = !!token;
@@ -40,7 +40,6 @@ export default function HomePage() {
     setSignupOpen(!signupOpen);
   };
   const togglePostForm = () => setShowPostForm(!showPostForm);
-
   const logout = () => {
     localStorage.removeItem("token");
     window.location.reload();
@@ -50,24 +49,16 @@ export default function HomePage() {
     const fetchPosts = async () => {
       try {
         const res = await fetch(`${API}/posts`);
-        const text = await res.text();
-        try {
-          const data = JSON.parse(text);
-          if (!Array.isArray(data)) throw new Error("Expected array");
-          setPosts(
-            data.map((post) => ({
-              ...post,
-              comments: Array.isArray(post.comments) ? post.comments : [],
-            }))
-          );
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setPosts(data.map((post) => ({
+            ...post,
+            comments: Array.isArray(post.comments) ? post.comments : [],
+          })));
           setLoadError(null);
-        } catch (err) {
-          console.error("Invalid JSON from /posts", err);
-          setLoadError("Failed to load posts.");
-        }
+        } else throw new Error("Expected array");
       } catch (err) {
-        console.error("Network error fetching posts", err);
-        setLoadError("Network error while loading posts.");
+        setLoadError("Failed to load posts.");
       } finally {
         setLoading(false);
       }
@@ -80,9 +71,7 @@ export default function HomePage() {
       try {
         const decoded = jwtDecode(token);
         setCurrentUserId(decoded.id);
-      } catch (err) {
-        console.error("Invalid token", err);
-      }
+      } catch {}
     }
   }, [token]);
 
@@ -95,11 +84,11 @@ export default function HomePage() {
       });
       const data = await res.json();
       if (res.ok) {
-        alert("Signup successful, please log in.");
+        alert("Signup successful. Please log in.");
         toggleSignup();
         toggleLogin();
       } else alert(data.message);
-    } catch (err) {
+    } catch {
       alert("Signup error");
     }
   };
@@ -116,7 +105,7 @@ export default function HomePage() {
         localStorage.setItem("token", data.token);
         window.location.reload();
       } else alert(data.message);
-    } catch (err) {
+    } catch {
       alert("Login error");
     }
   };
@@ -129,69 +118,63 @@ export default function HomePage() {
     try {
       const res = await fetch(`${API}/posts`, {
         method: "POST",
-        headers: {
-          Authorization: token ? `Bearer ${token}` : "",
-        },
+        headers: { Authorization: token ? `Bearer ${token}` : "" },
         body: formData,
       });
-
       const data = await res.json();
       if (res.ok) {
         setPosts([{ ...data, comments: [] }, ...posts]);
-        setContent("");
-        setImage(null);
-        setShowPostForm(false);
-      } else {
-        alert(data.message || "Post failed");
-      }
-    } catch (err) {
+        setContent(""); setImage(null); setShowPostForm(false);
+      } else alert(data.message || "Post failed");
+    } catch {
       alert("Post error");
-      console.error(err);
     }
   };
 
   const handleComment = async (postId) => {
+    if (!isLoggedIn) return alert("Please login to comment.");
     try {
       const res = await fetch(`${API}/comments/${postId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ content: commentContent[postId] }),
       });
-
       const data = await res.json();
       if (res.ok) {
         const newComment = data.comment || data;
         setCommentContent({ ...commentContent, [postId]: "" });
         setPosts((prev) =>
           prev.map((post) =>
-            post._id === postId
-              ? { ...post, comments: [...(post.comments || []), newComment] }
-              : post
+            post._id === postId ? {
+              ...post,
+              comments: [...(post.comments || []), newComment]
+            } : post
           )
         );
-      } else {
-        alert(data.message);
-      }
-    } catch (err) {
+      } else alert(data.message);
+    } catch {
       alert("Comment error");
-      console.error(err);
     }
   };
 
   const getImageUrl = (post) => {
-    if (post.imageUrl && post.imageUrl.startsWith("http")) return post.imageUrl;
-    if (post.image && post.image.startsWith("http")) return post.image;
-    if (post.imageUrl) return `${API_BASE}${post.imageUrl}`;
-    if (post.image) return `${API_BASE}${post.image}`;
-    return null;
+    if (post.imageUrl?.startsWith("http")) return post.imageUrl;
+    if (post.image?.startsWith("http")) return post.image;
+    return post.imageUrl ? `${API_BASE}${post.imageUrl}` :
+           post.image ? `${API_BASE}${post.image}` : null;
   };
+
+  const filteredPosts = posts.filter((post) =>
+    post.content?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className={darkMode ? "dark" : ""}>
-      <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
+      <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition duration-300">
+        
         {/* Header */}
         <header className="flex justify-between items-center px-4 py-3 border-b border-gray-200 dark:border-gray-700">
           <div className="text-xl font-bold">feedbackly.me</div>
@@ -215,37 +198,50 @@ export default function HomePage() {
           </div>
         </header>
 
+        {/* Mobile Menu */}
         {menuOpen && (
           <div className="md:hidden px-4 py-3 flex flex-col gap-2">
             {isLoggedIn ? (
               <>
-                <button onClick={() => navigate("/dashboard")} className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600">Dashboard</button>
-                <button onClick={logout} className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Logout</button>
+                <button onClick={() => navigate("/dashboard")} className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded">Dashboard</button>
+                <button onClick={logout} className="px-4 py-2 bg-red-500 text-white rounded">Logout</button>
               </>
             ) : (
-              <button onClick={toggleLogin} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Login</button>
+              <button onClick={toggleLogin} className="px-4 py-2 bg-blue-600 text-white rounded">Login</button>
             )}
-            <button onClick={toggleDark} className="px-4 py-2 border rounded hover:bg-gray-100 dark:hover:bg-gray-800">Toggle Theme</button>
+            <button onClick={toggleDark} className="px-4 py-2 border rounded">Toggle Theme</button>
           </div>
         )}
 
+       
         {/* Hero Section */}
         <section className="text-center px-6 py-12 max-w-3xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-extrabold leading-tight mb-4">Drop your thoughts. Get instant feedback.</h1>
           <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-6">Share an idea or design and receive anonymous comments from the community.</p>
           <button
-  onClick={() => {
-    if (!isLoggedIn) {
-      alert("Please log in to post.");
-    } else {
-      togglePostForm();
-    }
-  }}
-  className="px-6 py-2 bg-black dark:bg-white text-white dark:text-black rounded-full font-medium hover:scale-105 transition"
->
-  Post Something
-</button>
-</section>
+            onClick={() => {
+              if (!isLoggedIn) alert("Please log in to post.");
+              else togglePostForm();
+            }}
+            className="px-6 py-2 bg-black dark:bg-white text-white dark:text-black rounded-full font-medium hover:scale-105 transition"
+          >
+            Post Something
+          </button>
+        </section>
+
+        {/* Search */}
+        <div className="px-4 max-w-2xl mx-auto mb-4">
+          <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded px-3 py-2">
+            <Search size={16} className="text-gray-500" />
+            <input
+              type="text"
+              placeholder="Search posts..."
+              className="bg-transparent outline-none w-full"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
 
         {/* Post Form */}
         {showPostForm && (
@@ -268,73 +264,68 @@ export default function HomePage() {
           </div>
         )}
 
-       
-{/* Posts Section */}
-<section className="px-4 max-w-2xl mx-auto grid gap-6 pb-12">
-  {loading ? (
-    <div className="text-center text-gray-500 dark:text-gray-400">Loading posts...</div>
-  ) : loadError ? (
-    <div className="text-center text-red-500">{loadError}</div>
-  ) : posts.length === 0 ? (
-    <div className="text-center text-gray-500 dark:text-gray-400">No posts yet. Be the first to post!</div>
-  ) : (
-    posts.map((post) => (
-      <div key={post._id} className="border border-gray-200 dark:border-gray-700 rounded-2xl p-4 bg-white dark:bg-gray-800 shadow-sm">
-        <p className="text-lg mb-3">{post.content}</p>
-        {getImageUrl(post) && (
-          <img
-            src={getImageUrl(post)}
-            alt="post"
-            className="mb-3 rounded-lg"
-          />
-        )}
-        <div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-          Posted on {new Date(post.createdAt).toLocaleString()}
-        </div>
+        {/* Posts Section */}
+        <section className="px-4 max-w-2xl mx-auto grid gap-6 pb-12">
+          {loading ? (
+            <div className="text-center text-gray-500 dark:text-gray-400">Loading posts...</div>
+          ) : loadError ? (
+            <div className="text-center text-red-500">{loadError}</div>
+          ) : filteredPosts.length === 0 ? (
+            <div className="text-center text-gray-500 dark:text-gray-400">No matching posts.</div>
+          ) : (
+            filteredPosts.map((post) => (
+              <div
+                key={post._id}
+                className="transition transform hover:scale-[1.01] hover:shadow-lg border border-gray-200 dark:border-gray-700 rounded-2xl p-4 bg-white dark:bg-gray-800"
+              >
+                <p className="text-lg mb-3">{post.content}</p>
+                {getImageUrl(post) && (
+                  <img src={getImageUrl(post)} alt="post" className="mb-3 rounded-lg" />
+                )}
+                <div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  Posted on {new Date(post.createdAt).toLocaleString()}
+                </div>
 
-        {/* Comments */}
-        <div className="space-y-2">
-          {(post.comments || []).map((comment, index) => (
-            <div key={index} className="text-sm bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded">
-              {comment.content}
-            </div>
-          ))}
-        </div>
+                {/* Comments */}
+                <div className="space-y-2">
+                  {(post.comments || []).slice(0, 3).map((comment, i) => (
+                    <div key={i} className="text-sm bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded">
+                      {comment.content}
+                    </div>
+                  ))}
+                  {post.comments?.length > 3 && (
+                    <div className="text-xs text-gray-400 italic">...and {post.comments.length - 3} more</div>
+                  )}
+                </div>
 
-        {/* Add Comment - Only show if user is NOT the author */}
-        {(
-  !currentUserId ||
-  (
-    (typeof post.author === "string" && post.author !== currentUserId) ||
-    (typeof post.author === "object" && post.author?._id !== currentUserId)
-  )
-) && (
+                {/* Comment Form */}
+                {(isLoggedIn &&
+                  post.author !== currentUserId &&
+                  post.author?._id !== currentUserId) && (
+                  <div className="mt-3">
+                    <textarea
+                      rows="2"
+                      placeholder="Leave a comment..."
+                      value={commentContent[post._id] || ""}
+                      onChange={(e) =>
+                        setCommentContent({ ...commentContent, [post._id]: e.target.value })
+                      }
+                      className="w-full mb-2 p-2 rounded border bg-white dark:bg-gray-700 dark:text-white"
+                    />
+                    <button
+                      onClick={() => handleComment(post._id)}
+                      className="px-4 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    >
+                      Comment
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </section>
 
-
-
-          <div className="mt-3">
-            <textarea
-              rows="2"
-              placeholder="Leave a comment..."
-              value={commentContent[post._id] || ""}
-              onChange={(e) =>
-                setCommentContent({ ...commentContent, [post._id]: e.target.value })
-              }
-              className="w-full mb-2 p-2 rounded border bg-white dark:bg-gray-700 dark:text-white"
-            />
-            <button
-              onClick={() => handleComment(post._id)}
-              className="px-4 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Comment
-            </button>
-          </div>
-        )}
-      </div>
-    ))
-  )}
-</section>
-
+        
 
         {/* Login Modal */}
         {loginOpen && (

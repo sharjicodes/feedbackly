@@ -1,3 +1,4 @@
+//commemntcontroller.js
 import Comment from '../models/Comment.js';
 import Post from '../models/Post.js';
 import mongoose from 'mongoose';

@@ -23,7 +23,7 @@ export const addComment = async (req, res) => {
     const comment = new Comment({
       post: postId,
       content,
-      commenter: req.user ? req.user.id : null,
+      commenter: req.user.id,
     });
 
     const savedComment = await comment.save();

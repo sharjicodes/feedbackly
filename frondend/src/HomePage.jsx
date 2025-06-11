@@ -70,7 +70,7 @@ export default function HomePage() {
     if (token) {
       try {
         const decoded = jwtDecode(token);
-        setCurrentUserId(decoded.id);
+        setCurrentUserId(decoded.userId);
       } catch {}
     }
   }, [token]);
@@ -301,7 +301,7 @@ export default function HomePage() {
                 {/* Comment Form */}
                 {isLoggedIn &&
   post.author &&
-  (post.author._id || post.author) !== currentUserId && (
+  (post.author?._id || post.author) !== currentUserId && (
                   <div className="mt-3">
                     <textarea
                       rows="2"

@@ -233,8 +233,19 @@ export default function HomePage() {
         <section className="text-center px-6 py-12 max-w-3xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-extrabold leading-tight mb-4">Drop your thoughts. Get instant feedback.</h1>
           <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-6">Share an idea or design and receive anonymous comments from the community.</p>
-          <button onClick={togglePostForm} className="px-6 py-2 bg-black dark:bg-white text-white dark:text-black rounded-full font-medium hover:scale-105 transition">Post Something</button>
-        </section>
+          <button
+  onClick={() => {
+    if (!isLoggedIn) {
+      alert("Please log in to post.");
+    } else {
+      togglePostForm();
+    }
+  }}
+  className="px-6 py-2 bg-black dark:bg-white text-white dark:text-black rounded-full font-medium hover:scale-105 transition"
+>
+  Post Something
+</button>
+</section>
 
         {/* Post Form */}
         {showPostForm && (

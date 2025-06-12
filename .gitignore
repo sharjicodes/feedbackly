@@ -1,0 +1,30 @@
+# Root
+.env
+.DS_Store
+*.log
+
+# Node modules
+node_modules/
+frondend/node_modules/
+backend/node_modules/
+
+# Build outputs
+frondend/build/
+frondend/dist/
+backend/dist/
+
+# Uploaded media
+backend/uploads/
+
+# OS-specific
+Thumbs.db
+
+# IDEs and editors
+.vscode/
+.idea/
+
+# Environment files
+frondend/.env
+frondend/.env.*.local
+backend/.env
+backend/.env.*.local

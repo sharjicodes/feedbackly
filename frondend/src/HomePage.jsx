@@ -261,28 +261,26 @@ export default function HomePage() {
           </div>
         </div>
 
-       <form onSubmit={handlePost}>
-  <textarea
-    rows="3"
-    value={content}
-    onChange={(e) => setContent(e.target.value)}
-    placeholder="Share your thought..."
-    className="w-full mb-3 p-2 rounded border bg-white dark:bg-gray-700 dark:text-white"
-  />
-  <input
-    type="file"
-    accept="image/*"
-    onChange={(e) => setImage(e.target.files[0])}
-    className="mb-3 block w-full text-sm text-gray-500 dark:text-gray-300"
-  />
-  <button
-    type="submit"
-    className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
-  >
-    Post
-  </button>
-</form>
-
+       {/* Post Form */}
+        {showPostForm && (
+          <div className="max-w-xl mx-auto px-4 mb-10">
+            <div className="border p-4 rounded-xl bg-white dark:bg-gray-800 shadow">
+              <textarea
+                rows="3"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Share your thought..."
+                className="w-full mb-3 p-2 rounded border bg-white dark:bg-gray-700 dark:text-white"
+              />
+              <input
+                type="file"
+                onChange={(e) => setImage(e.target.files[0])}
+                className="mb-3 block w-full text-sm text-gray-500 dark:text-gray-300"
+              />
+              <button onClick={handlePost} className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">Post</button>
+            </div>
+          </div>
+        )}
 
         {/* Posts Section */}
         <section className="px-4 max-w-2xl mx-auto grid gap-6 pb-12">

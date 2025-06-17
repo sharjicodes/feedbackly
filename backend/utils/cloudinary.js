@@ -12,7 +12,7 @@ export const storage = new CloudinaryStorage({
   cloudinary,
   params: {
     folder: 'feedbackly-posts',
-    allowed_formats: ['jpg', 'jpeg', 'png'],
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
   },
 });
 

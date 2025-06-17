@@ -1,3 +1,4 @@
+//postcontroller.js
 import Post from "../models/Post.js";
 import multer from "multer";
 import { storage } from "../utils/cloudinary.js";
@@ -8,11 +9,11 @@ export const uploadMiddleware = upload.single("image");
 export const createPost = async (req, res) => {
   try {
     const { content } = req.body;
-    const image = req.file ? req.file.path : null;
+    const image = req.file ? req.file.url : null; // ✅ FIXED
 
     console.log("User:", req.user);
     console.log("Content:", content);
-    console.log("Image:", image);
+    console.log("Image:", image); // should show Cloudinary URL now
 
     const newPost = new Post({
       content,
@@ -23,13 +24,14 @@ export const createPost = async (req, res) => {
     await newPost.save();
     res.status(201).json(newPost);
   } catch (error) {
-    console.error("Post creation error:", error); // Log full error
+    console.error("Post creation error:", JSON.stringify(error, null, 2));
     res.status(500).json({
       message: "Post creation failed",
       error: error.message,
     });
   }
 };
+
 
 export const getMyPosts = async (req, res) => {
   try {

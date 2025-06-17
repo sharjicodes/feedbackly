@@ -10,12 +10,24 @@ export const createPost = async (req, res) => {
     const { content } = req.body;
     const image = req.file ? req.file.path : null;
 
-    const newPost = new Post({ content, image, author: req.user?.id ?? null, });
+    console.log("User:", req.user);
+    console.log("Content:", content);
+    console.log("Image:", image);
+
+    const newPost = new Post({
+      content,
+      image,
+      author: req.user?.id ?? null,
+    });
+
     await newPost.save();
     res.status(201).json(newPost);
   } catch (error) {
-    console.error("Post creation error:", error);
-    res.status(500).json({ message: "Post creation failed", error: error.message });
+    console.error("Post creation error:", error); // Log full error
+    res.status(500).json({
+      message: "Post creation failed",
+      error: error.message,
+    });
   }
 };
 

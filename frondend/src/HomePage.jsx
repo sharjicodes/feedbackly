@@ -110,19 +110,30 @@ export default function HomePage() {
     }
   };
 
-  const handlePost = async (e) => {
-  e.preventDefault(); // <-- Add this line
+ const handlePost = async (e) => {
+  e.preventDefault();
+
   const formData = new FormData();
   formData.append("content", content);
-  if (image) formData.append("image", image);
+  if (image) {
+    formData.append("image", image);
+    console.log("Image being uploaded:", image);
+  } else {
+    console.log("No image selected");
+  }
 
   try {
     const res = await fetch(`${API}/posts`, {
       method: "POST",
-      headers: { Authorization: token ? `Bearer ${token}` : "" },
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+        // Do NOT set Content-Type manually here
+      },
       body: formData,
     });
+
     const data = await res.json();
+
     if (res.ok) {
       setPosts([{ ...data, comments: [] }, ...posts]);
       setContent("");
@@ -131,7 +142,8 @@ export default function HomePage() {
     } else {
       alert(data.message || "Post failed");
     }
-  } catch {
+  } catch (err) {
+    console.error("Post error:", err);
     alert("Post error");
   }
 };

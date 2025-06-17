@@ -9,7 +9,7 @@ export const uploadMiddleware = upload.single("image");
 export const createPost = async (req, res) => {
   try {
     const { content } = req.body;
-    const image = req.file ? req.file.url : null; // ✅ FIXED
+    const image = req.file ? req.file.path : null; // ✅ FIXED
 
     console.log("User:", req.user);
     console.log("Content:", content);

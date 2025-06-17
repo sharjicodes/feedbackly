@@ -1,3 +1,4 @@
+//postroutes.js
 import express from "express";
 import { createPost, getAllPosts, getMyPosts, uploadMiddleware } from "../controllers/postController.js";
 import { protect } from "../middleware/authMiddleware.js";

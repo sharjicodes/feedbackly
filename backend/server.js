@@ -23,7 +23,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://feedbackly-me.vercel.app"
+    "https://feedbackly-wnx4.vercel.app"
   ],
   credentials: true
 }));
